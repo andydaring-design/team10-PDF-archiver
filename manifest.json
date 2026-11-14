@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Team 10 PDF to Images",
+  "version": "1.4.0",
+  "description": "Open a PDF in Chrome, click the icon, and save its pages (or the pictures inside it) as PNG, JPEG or WebP images in a folder you choose.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon64.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon64.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Save this PDF as images"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "app.html"
+  },
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "downloads",
+    "contextMenus",
+    "scripting",
+    "webRequest",
+    "debugger",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Team 10 PDF to Images</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="icons/icon32.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main>
+  <h1><img src="icons/icon32.png" alt=""> Team 10 PDF to Images <a href="#" id="fullTab" title="Open the converter in a full tab">open in a tab ↗</a></h1>
+
+  <!-- 1. PDFs -->
+  <section>
+    <h2><span class="num">1</span> PDFs</h2>
+    <div id="curTab" hidden><span class="muted">This tab:</span> <span id="curTitle"></span><button id="curAdd" class="small">Add this tab's PDF</button><button id="curShot" class="alt small" title="Scroll through the page and capture it from the screen as one long image">Screen capture</button></div>
+    <div id="tabMsg" class="tabmsg" hidden></div>
+    <div id="capture" class="tabmsg" hidden>
+      <strong>Capture from the screen</strong> - works with any viewer. The extension scrolls through the PDF in that tab and
+      cuts each page out of the screenshots as its own image (or makes one long image if the pages cannot be told apart). It is as sharp as the screen: <strong>zoom the viewer in first</strong>
+      for sharper text. Keep the tab visible and do not scroll while it works.
+      <div class="row wrap"><button id="shotBtn" class="small">Capture from the screen</button></div>
+      <strong>Or catch the PDF file itself while it opens</strong> - press Start, then close the PDF in that tab and open it again.
+      Chrome shows a "started debugging this browser" bar while it watches; the website cannot see it.
+      <div class="row wrap"><button id="capStart" class="alt small">Start</button><button id="capStop" class="alt small" hidden>Stop</button><span id="capMsg" class="muted"></span></div>
+    </div>
+    <details id="diag" hidden>
+      <summary>What was looked at (to send to whoever looks after this extension)</summary>
+      <pre id="diagText"></pre>
+      <button id="copyDiag" class="alt small">Copy details</button>
+    </details>
+    <div id="fileAccess" class="tabmsg warn" hidden>
+      This PDF is a file on your computer. Chrome only lets the extension read it if you allow it:
+      open the extension's details, turn on <strong>Allow access to file URLs</strong>, then reload the PDF tab and click the icon again.
+      <div><button id="openExt" class="alt small">Open the extension's settings</button></div>
+      (Or just drop the file in below.)
+    </div>
+    <ul id="files"></ul>
+    <p id="noPdf" class="muted">No PDF added yet.</p>
+    <div id="otherTabs" hidden>
+      <div class="row between"><span class="muted">Other PDFs open in your browser</span><button id="addAllTabs" class="alt small" hidden>Add all</button></div>
+      <div id="tabList"></div>
+    </div>
+    <div id="drop">
+      Or drop PDF files here
+      <button id="pick" class="alt inline">Choose files…</button>
+      <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
+    </div>
+  </section>
+
+  <!-- 2. Output folder -->
+  <section>
+    <h2><span class="num">2</span> Save to</h2>
+    <div class="row">
+      <label class="radio"><input type="radio" name="dest" value="folder" checked> A folder I choose</label>
+      <label class="radio"><input type="radio" name="dest" value="downloads"> My Downloads folder</label>
+    </div>
+    <div id="destFolder" class="row wrap">
+      <button id="chooseDir" class="alt small">Choose folder…</button>
+      <span id="dirName" class="muted">No folder chosen</span>
+    </div>
+    <div id="destDownloads" hidden>
+      <label>Subfolder inside Downloads
+        <input type="text" id="dlFolder" placeholder="PDF images" autocomplete="off">
+      </label>
+    </div>
+    <label class="chk"><input type="checkbox" id="subfolder" checked> Put each PDF's images in its own subfolder (named after the PDF)</label>
+    <label class="chk"><input type="checkbox" id="alsoPdf"> Also save the PDF itself when converting (screen captures are made into a PDF)</label>
+    <label>If a file with the same name is already there
+      <select id="exists">
+        <option value="rename">Keep both (add a number)</option>
+        <option value="replace">Replace it</option>
+        <option value="skip">Skip it</option>
+      </select>
+    </label>
+  </section>
+
+  <!-- 3. Options -->
+  <section>
+    <h2><span class="num">3</span> Options</h2>
+    <div class="grid">
+      <label>Extract
+        <select id="mode">
+          <option value="pages">Each page as an image</option>
+          <option value="embedded">The pictures inside the PDF</option>
+        </select>
+      </label>
+      <label>Pages
+        <input type="text" id="pages" placeholder="All   (or e.g. 1-3, 5, 8-)" autocomplete="off">
+      </label>
+
+      <label>Format
+        <select id="format">
+          <option value="png">PNG (lossless)</option>
+          <option value="jpeg">JPEG (smaller files)</option>
+          <option value="webp">WebP (smallest files)</option>
+        </select>
+      </label>
+      <label id="qualityBox">Quality <output id="qualityOut">90</output>
+        <input type="range" id="quality" min="10" max="100" step="1" value="90">
+      </label>
+
+      <label>Size
+        <select id="sizeMode">
+          <option value="dpi">Resolution (DPI)</option>
+          <option value="width">Width in pixels</option>
+          <option value="height">Height in pixels</option>
+          <option value="longest">Longest side in pixels</option>
+          <option value="original">Original size</option>
+        </select>
+      </label>
+      <label id="sizeValBox"><span id="sizeValLabel">DPI</span>
+        <input type="number" id="sizeVal" min="1" step="1" value="150" list="dpiList">
+        <datalist id="dpiList"><option value="72"><option value="96"><option value="150"><option value="200"><option value="300"><option value="600"></datalist>
+      </label>
+
+      <label id="bgBox">Background
+        <select id="bg">
+          <option value="white">White</option>
+          <option value="transparent">Transparent</option>
+        </select>
+      </label>
+      <label id="minBox" hidden>Skip pictures smaller than (pixels)
+        <input type="number" id="minSize" min="0" step="1" value="32">
+      </label>
+
+      <label>File name start
+        <input type="text" id="prefix" placeholder="(the PDF's name)" autocomplete="off">
+      </label>
+      <label class="chk tight"><input type="checkbox" id="pad" checked> Pad page numbers (page-007 instead of page-7) so files sort in order</label>
+    </div>
+    <p id="sizeHint" class="muted"></p>
+  </section>
+
+  <div class="actions">
+    <button id="start" disabled>Convert</button>
+    <button id="cancel" class="alt" hidden>Cancel</button>
+  </div>
+  <div id="progressBox" hidden>
+    <div class="bar"><div id="barFill"></div></div>
+    <div id="status"></div>
+  </div>
+  <div id="err" role="alert"></div>
+  <pre id="log" hidden></pre>
+</main>
+<script type="module" src="app.js"></script>
+</body></html>
